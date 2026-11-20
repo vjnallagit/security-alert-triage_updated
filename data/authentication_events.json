@@ -1,0 +1,21 @@
+[
+  {"event_id": "AUTH-A-001", "alert_id": "ALERT-A-001", "timestamp": "2026-03-10T02:08:00+00:00", "account": "admin.synthetic01", "source": "203.0.113.25", "event_type": "login_failure", "success": false, "asset_id": "ASSET-IDP-01"},
+  {"event_id": "AUTH-A-002", "alert_id": "ALERT-A-001", "timestamp": "2026-03-10T02:08:30+00:00", "account": "admin.synthetic01", "source": "203.0.113.25", "event_type": "login_failure", "success": false, "asset_id": "ASSET-IDP-01"},
+  {"event_id": "AUTH-A-003", "alert_id": "ALERT-A-001", "timestamp": "2026-03-10T02:09:00+00:00", "account": "admin.synthetic01", "source": "203.0.113.25", "event_type": "login_failure", "success": false, "asset_id": "ASSET-IDP-01"},
+  {"event_id": "AUTH-A-004", "alert_id": "ALERT-A-001", "timestamp": "2026-03-10T02:09:30+00:00", "account": "admin.synthetic01", "source": "203.0.113.25", "event_type": "login_failure", "success": false, "asset_id": "ASSET-IDP-01"},
+  {"event_id": "AUTH-A-005", "alert_id": "ALERT-A-001", "timestamp": "2026-03-10T02:10:00+00:00", "account": "admin.synthetic01", "source": "203.0.113.25", "event_type": "login_failure", "success": false, "asset_id": "ASSET-IDP-01"},
+  {"event_id": "AUTH-A-006", "alert_id": "ALERT-A-001", "timestamp": "2026-03-10T02:10:30+00:00", "account": "admin.synthetic01", "source": "203.0.113.25", "event_type": "login_failure", "success": false, "asset_id": "ASSET-IDP-01"},
+  {"event_id": "AUTH-A-007", "alert_id": "ALERT-A-001", "timestamp": "2026-03-10T02:11:00+00:00", "account": "admin.synthetic01", "source": "203.0.113.25", "event_type": "login_failure", "success": false, "asset_id": "ASSET-IDP-01"},
+  {"event_id": "AUTH-A-008", "alert_id": "ALERT-A-001", "timestamp": "2026-03-10T02:11:30+00:00", "account": "admin.synthetic01", "source": "203.0.113.25", "event_type": "login_failure", "success": false, "asset_id": "ASSET-IDP-01"},
+  {"event_id": "AUTH-A-009", "alert_id": "ALERT-A-001", "timestamp": "2026-03-10T02:12:00+00:00", "account": "admin.synthetic01", "source": "203.0.113.25", "event_type": "login_failure", "success": false, "asset_id": "ASSET-IDP-01"},
+  {"event_id": "AUTH-A-010", "alert_id": "ALERT-A-001", "timestamp": "2026-03-10T02:12:30+00:00", "account": "admin.synthetic01", "source": "203.0.113.25", "event_type": "login_failure", "success": false, "asset_id": "ASSET-IDP-01"},
+  {"event_id": "AUTH-A-011", "alert_id": "ALERT-A-001", "timestamp": "2026-03-10T02:13:00+00:00", "account": "admin.synthetic01", "source": "203.0.113.25", "event_type": "login_failure", "success": false, "asset_id": "ASSET-IDP-01"},
+  {"event_id": "AUTH-A-012", "alert_id": "ALERT-A-001", "timestamp": "2026-03-10T02:14:00+00:00", "account": "admin.synthetic01", "source": "203.0.113.25", "event_type": "login_failure", "success": false, "asset_id": "ASSET-IDP-01"},
+
+  {"event_id": "AUTH-B-001", "alert_id": "ALERT-B-001", "timestamp": "2026-03-10T09:30:00+00:00", "account": "user.demo01", "source": "198.51.100.17", "event_type": "login_failure", "success": false, "asset_id": "ASSET-WIKI-01"},
+  {"event_id": "AUTH-B-002", "alert_id": "ALERT-B-001", "timestamp": "2026-03-10T09:32:00+00:00", "account": "user.demo01", "source": "198.51.100.17", "event_type": "login_success", "success": true, "asset_id": "ASSET-WIKI-01"},
+
+  {"event_id": "AUTH-C-001", "alert_id": "ALERT-C-001", "timestamp": "2026-03-10T03:40:00+00:00", "account": "svc-payments-api", "source": "192.0.2.80", "event_type": "login_failure", "success": false, "asset_id": "ASSET-PAY-01"},
+  {"event_id": "AUTH-C-002", "alert_id": "ALERT-C-001", "timestamp": "2026-03-10T03:42:00+00:00", "account": "svc-payments-api", "source": "192.0.2.80", "event_type": "off_hours_service_access", "success": true, "asset_id": "ASSET-PAY-01"},
+  {"event_id": "AUTH-C-003", "alert_id": "ALERT-C-001", "timestamp": "2026-03-10T03:47:00+00:00", "account": "svc-payments-api", "source": "192.0.2.80", "event_type": "off_hours_service_access", "success": true, "asset_id": "ASSET-PAY-01"}
+]

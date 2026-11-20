@@ -1,0 +1,49 @@
+{
+  "description": "SIMULATED academic experience data for the Learning Agent. These counts are invented for coursework and are NOT real security statistics. Success rate is derived as success / (success + failure).",
+  "simulated": true,
+  "records": {
+    "repeated_failed_login": {
+      "investigate": { "success": 8, "failure": 2 },
+      "escalate": { "success": 6, "failure": 1 },
+      "monitor": { "success": 2, "failure": 5 }
+    },
+    "minor_authentication_anomaly": {
+      "monitor": { "success": 9, "failure": 1 },
+      "investigate": { "success": 4, "failure": 3 },
+      "escalate": { "success": 1, "failure": 6 }
+    },
+    "correlated_service_anomaly": {
+      "investigate": { "success": 7, "failure": 3 },
+      "escalate": { "success": 5, "failure": 2 },
+      "monitor": { "success": 1, "failure": 4 }
+    },
+    "unusual_data_transfer": {
+      "investigate": { "success": 5, "failure": 2 },
+      "escalate": { "success": 3, "failure": 3 }
+    },
+    "privileged_login_anomaly": {
+      "INVESTIGATE": { "success": 8, "failure": 2 },
+      "ESCALATE_TO_SECURITY_ANALYST": { "success": 5, "failure": 3 },
+      "COLLECT_MORE_EVIDENCE": { "success": 3, "failure": 4 },
+      "MONITOR": { "success": 2, "failure": 6 }
+    },
+    "low_severity_limited_evidence": {
+      "COLLECT_MORE_EVIDENCE": { "success": 9, "failure": 1 },
+      "MONITOR": { "success": 6, "failure": 4 },
+      "INVESTIGATE": { "success": 4, "failure": 4 },
+      "ESCALATE_TO_SECURITY_ANALYST": { "success": 1, "failure": 6 }
+    },
+    "critical_service_correlated_access": {
+      "ESCALATE_TO_SECURITY_ANALYST": { "success": 7, "failure": 1 },
+      "INVESTIGATE": { "success": 4, "failure": 5 },
+      "COLLECT_MORE_EVIDENCE": { "success": 1, "failure": 4 },
+      "MONITOR": { "success": 0, "failure": 5 }
+    },
+    "general_security_alert": {
+      "INVESTIGATE": { "success": 5, "failure": 3 },
+      "COLLECT_MORE_EVIDENCE": { "success": 4, "failure": 4 },
+      "ESCALATE_TO_SECURITY_ANALYST": { "success": 3, "failure": 3 },
+      "MONITOR": { "success": 3, "failure": 5 }
+    }
+  }
+}

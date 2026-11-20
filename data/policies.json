@@ -1,0 +1,75 @@
+[
+  {
+    "policy_id": "POL-PRIV-LOGIN-001",
+    "title": "Privileged account login anomaly response",
+    "description": "Defensive guidance for repeated failed logins against privileged accounts.",
+    "recommended_actions": [
+      "Review authentication activity for the targeted account",
+      "Validate whether the source address is expected",
+      "Review correlated alerts for the same source",
+      "Assess the affected asset and its criticality",
+      "Escalate to a security analyst (SOC) for review",
+      "Request authorized containment from a human approver if compromise is later confirmed"
+    ],
+    "escalation_guidance": "Escalate to the SOC when evidence is strong and the account is privileged, even if compromise is not confirmed.",
+    "prohibited_automated_actions": [
+      "block_user",
+      "disable_account",
+      "modify_firewall_rule",
+      "terminate_process",
+      "quarantine_host",
+      "offensive_response"
+    ],
+    "restriction": "Automated user blocking, account disabling, offensive response, or containment is not permitted by this assistant. Consequential security actions require human authorization.",
+    "automated_actions_permitted": false,
+    "human_authorization_required": true
+  },
+  {
+    "policy_id": "POL-LOW-SEVERITY-001",
+    "title": "Low-severity alert handling",
+    "description": "Defensive guidance for low-severity alerts with limited evidence.",
+    "recommended_actions": [
+      "Monitor activity for further related alerts",
+      "Collect additional evidence if the alert recurs",
+      "Review authentication activity for the account if needed"
+    ],
+    "escalation_guidance": "Do not escalate on limited evidence alone; escalate if new correlated evidence appears.",
+    "prohibited_automated_actions": [
+      "block_user",
+      "disable_account",
+      "modify_firewall_rule",
+      "terminate_process",
+      "quarantine_host",
+      "offensive_response"
+    ],
+    "restriction": "Automated user blocking, account disabling, offensive response, or containment is not permitted by this assistant. Consequential security actions require human authorization.",
+    "automated_actions_permitted": false,
+    "human_authorization_required": true
+  },
+  {
+    "policy_id": "POL-CORRELATED-CRITICAL-001",
+    "title": "Correlated alerts on a critical service",
+    "description": "Defensive guidance when several correlated alerts and unusual access involve a critical service.",
+    "recommended_actions": [
+      "Review correlated alerts together",
+      "Review authentication activity for the service account",
+      "Validate with the service owner whether the access was expected",
+      "Collect additional evidence to resolve conflicting indicators",
+      "Assess the affected asset",
+      "Escalate to a security analyst (SOC) for review",
+      "Request authorized containment from a human approver if impact is confirmed"
+    ],
+    "escalation_guidance": "Involve the SOC and the service owner promptly because the asset is critical, even though impact is unconfirmed.",
+    "prohibited_automated_actions": [
+      "block_user",
+      "disable_account",
+      "modify_firewall_rule",
+      "terminate_process",
+      "quarantine_host",
+      "offensive_response"
+    ],
+    "restriction": "Automated user blocking, account disabling, offensive response, or containment is not permitted by this assistant. Consequential security actions require human authorization.",
+    "automated_actions_permitted": false,
+    "human_authorization_required": true
+  }
+]

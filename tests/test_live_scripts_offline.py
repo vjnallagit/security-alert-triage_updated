@@ -1,0 +1,110 @@
+"""Offline tests of the live-only scripts' own logic (guards, display, failure help, JSON report).
+
+The scripts are never pointed at a real Ollama server here: the adapter is replaced by a scripted fake model.
+"""
+
+import json
+import os
+import subprocess
+import sys
+from pathlib import Path
+
+import pytest
+
+from models.llm_models import RuntimeMode
+from services.llm_errors import LLMConnectionError
+from services.scenario_service import get_scenario
+from tests.fakes.fake_tool_calling_model import FAKE_MODEL_NAME, happy_path_model
+
+ROOT = Path(__file__).resolve().parent.parent
+SCRIPTS = ROOT / "scripts"
+LIVE_SCRIPTS = ["validate_ollama_connection.py", "validate_ollama_tool_calling.py", "run_llm_scenarios.py"]
+
+
+@pytest.fixture
+def live_modules(monkeypatch: pytest.MonkeyPatch):
+    monkeypatch.syspath_prepend(str(SCRIPTS))
+    import live_common
+    import run_llm_scenarios
+    import validate_ollama_tool_calling
+    return live_common, run_llm_scenarios, validate_ollama_tool_calling
+
+
+class PerScenarioFakeAdapter:
+    """Stands in for OllamaChatModelAdapter: picks a scripted model for whichever scenario it is asked about."""
+
+    runtime_mode = RuntimeMode.MOCK
+    model_name = FAKE_MODEL_NAME
+
+    def __init__(self, config) -> None:
+        self._model = None
+
+    def bind_tools(self, tools):
+        return self
+
+    def invoke(self, messages):
+        if len(messages) == 2:  # the first turn of a run: choose the script for this scenario
+            content = messages[1].content
+            json_start = content.find("{")
+
+            if json_start == -1:
+                raise ValueError("Scenario JSON not found in LLM message.")
+
+            scenario_data = json.loads(content[json_start:])
+            scenario = get_scenario(scenario_data["scenario_id"])
+
+            self._model = happy_path_model(scenario)
+
+        return self._model.invoke(messages) 
+
+
+@pytest.mark.parametrize("script", LIVE_SCRIPTS)
+def test_live_scripts_refuse_to_run_without_the_explicit_flag(script: str) -> None:
+    env = {k: v for k, v in os.environ.items() if k != "RUN_OLLAMA_INTEGRATION"}
+    result = subprocess.run([sys.executable, str(SCRIPTS / script)], capture_output=True, text=True, env=env, timeout=120)
+    assert result.returncode == 2 and "RUN_OLLAMA_INTEGRATION" in result.stdout and "Traceback" not in result.stderr
+
+
+def test_failure_report_gives_next_checks_and_hides_the_stack_trace_by_default(live_modules, capsys) -> None:
+    live_common, _, _ = live_modules
+    live_common.report_failure(LLMConnectionError("Could not reach the local Ollama server."), None, debug=False)
+    shown = capsys.readouterr().out
+    assert "ollama --version" in shown and "ollama list" in shown and "ollama serve" in shown
+    assert "Traceback" not in shown and "--debug" in shown
+
+
+def test_run_all_scenarios_script_flow_with_a_fake_adapter_and_json_report(
+    live_modules, monkeypatch: pytest.MonkeyPatch, tmp_path: Path, capsys
+) -> None:
+    _, run_llm_scenarios, _ = live_modules
+    monkeypatch.setenv("RUN_OLLAMA_INTEGRATION", "true")
+    monkeypatch.setenv("OLLAMA_MODEL", "example-model:tag")
+    monkeypatch.setattr(run_llm_scenarios, "OllamaChatModelAdapter", PerScenarioFakeAdapter)
+    assert run_llm_scenarios.main(["--output-dir", str(tmp_path)]) == 0
+    shown = capsys.readouterr().out
+    for scenario_id, outcome in (("A", "INVESTIGATE"), ("B", "COLLECT_MORE_EVIDENCE"), ("C", "ESCALATE_TO_SECURITY_ANALYST")):
+        assert f"=== Scenario {scenario_id}" in shown and f"Decision: {outcome}" in shown
+    assert "Tool-call sequence" in shown and "elapsed" in shown and "No remediation was performed" in shown
+    (report_path,) = tmp_path.glob("llm_scenarios_*.json")
+    report = json.loads(report_path.read_text(encoding="utf-8"))
+    assert set(report["scenarios"]) == {"A", "B", "C"} and report["configuration"]["model"] == "example-model:tag"
+    assert "password" not in report_path.read_text(encoding="utf-8").lower()
+
+
+def test_report_folder_inside_the_data_directory_is_refused(live_modules) -> None:
+    _, run_llm_scenarios, _ = live_modules
+    with pytest.raises(ValueError, match="data directory"):
+        run_llm_scenarios.safe_output_dir(str(ROOT / "data" / "reports"))
+    assert not (ROOT / "data" / "reports").exists()
+
+
+def test_tool_calling_script_passes_with_a_fake_adapter(
+    live_modules, monkeypatch: pytest.MonkeyPatch, capsys
+) -> None:
+    _, _, tool_calling = live_modules
+    monkeypatch.setenv("RUN_OLLAMA_INTEGRATION", "true")
+    monkeypatch.setenv("OLLAMA_MODEL", "example-model:tag")
+    monkeypatch.setattr(tool_calling, "OllamaChatModelAdapter", PerScenarioFakeAdapter)
+    assert tool_calling.main([]) == 0
+    shown = capsys.readouterr().out
+    assert "get_alert_details" in shown and "Source record IDs" in shown and "validation successful" in shown

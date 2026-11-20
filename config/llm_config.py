@@ -1,0 +1,164 @@
+"""Configuration for the local Ollama connection.
+
+Read from environment variables through a small explicit loader; no .env file or extra package is
+needed. Nothing here connects to Ollama: it only validates values. The default is localhost, and a
+non-loopback host must be explicitly allowed so the application never reaches an unintended server by
+accident.
+"""
+
+import math
+import os
+from collections.abc import Mapping
+from typing import Self
+from urllib.parse import urlparse
+
+from pydantic import Field, ValidationError, field_validator, model_validator
+
+from models.goal_models import FrozenModel
+from services.llm_errors import LLMConfigurationError
+
+DEFAULT_BASE_URL = "http://127.0.0.1:11434"
+LOOPBACK_HOSTS = frozenset({"localhost", "127.0.0.1", "::1"})
+TRUE_VALUES = frozenset({"1", "true", "yes", "on"})
+FALSE_VALUES = frozenset({"0", "false", "no", "off"})
+
+
+class OllamaConfig(FrozenModel):
+    base_url: str = DEFAULT_BASE_URL
+    # Deliberately no default model: choose the exact tag you have pulled. Required for live use only.
+    model: str = ""
+    temperature: float = Field(default=0.0, ge=0.0, le=2.0)
+    request_timeout_seconds: float = Field(default=300.0, gt=0)
+
+    # Stage 1: concise model response containing tool calls.
+    tool_num_predict: int = Field(default=128, ge=32, le=512)
+
+    # Stage 2: compact final triage decision.
+    decision_num_predict: int = Field(default=256, ge=128, le=1024)
+
+    # Keep the local model resident between tool selection and final decision.
+    keep_alive: str = "30m"
+
+    max_tool_iterations: int = Field(default=8, ge=2, le=20)
+    minimum_tool_calls: int = Field(default=2, ge=2)
+    validate_model_on_init: bool = False
+    integration_enabled: bool = False
+    allow_remote_host: bool = False
+
+    @field_validator("temperature", "request_timeout_seconds")
+    @classmethod
+    def _must_be_finite(cls, value: float) -> float:
+        if not math.isfinite(value):
+            raise ValueError("must be a finite number")
+        return value
+
+    @field_validator("base_url")
+    @classmethod
+    def _base_url_must_be_a_plain_http_url(cls, value: str) -> str:
+        parsed = urlparse(value)
+        if parsed.scheme not in ("http", "https") or not parsed.hostname:
+            raise ValueError("base_url must be an http or https URL with a host")
+        if parsed.username or parsed.password:
+            raise ValueError("base_url must not contain credentials")
+        return value.rstrip("/")
+    @field_validator("keep_alive")
+    @classmethod
+    def _keep_alive_must_not_be_empty(cls, value: str) -> str:
+        cleaned = value.strip()
+        if not cleaned:
+            raise ValueError("keep_alive must not be empty")
+        return cleaned   
+
+    @model_validator(mode="after")
+    def _cross_field_rules(self) -> Self:
+        host = urlparse(self.base_url).hostname or ""
+        if host.lower() not in LOOPBACK_HOSTS and not self.allow_remote_host:
+            raise ValueError("base_url must be localhost unless allow_remote_host is explicitly enabled")
+        if self.integration_enabled and not self.model:
+            raise ValueError("a model name is required when live integration is enabled")
+        if self.minimum_tool_calls > self.max_tool_iterations:
+            raise ValueError("minimum_tool_calls must not exceed max_tool_iterations")
+        return self
+
+    def require_model(self) -> str:
+        """The configured model tag, or a clear error telling the user what to set."""
+        if not self.model:
+            raise LLMConfigurationError("OLLAMA_MODEL is not set; set it to the exact model tag you pulled.")
+        return self.model
+
+    def safe_summary(self) -> dict[str, object]:
+        """Values safe to print: no secrets exist in this configuration, and no environment is dumped."""
+        return {
+            "base_url": self.base_url,
+            "model": self.model or "(not set)",
+            "temperature": self.temperature,
+            "request_timeout_seconds": self.request_timeout_seconds,
+            "tool_num_predict": self.tool_num_predict,
+            "decision_num_predict": self.decision_num_predict,
+            "keep_alive": self.keep_alive,
+            "max_tool_iterations": self.max_tool_iterations,
+            "minimum_tool_calls": self.minimum_tool_calls,
+            "integration_enabled": self.integration_enabled,
+        }   
+
+
+def _parse_bool(name: str, raw: str) -> bool:
+    lowered = raw.strip().lower()
+    if lowered in TRUE_VALUES:
+        return True
+    if lowered in FALSE_VALUES:
+        return False
+    raise LLMConfigurationError(f"{name} must be true or false")
+
+
+def load_ollama_config(environ: Mapping[str, str] | None = None, **overrides: object) -> OllamaConfig:
+    """Build the configuration from OLLAMA_* / RUN_OLLAMA_INTEGRATION variables, then apply overrides."""
+    env = os.environ if environ is None else environ
+    values: dict[str, object] = {}
+
+    def text(name: str) -> str | None:
+        raw = env.get(name)
+        return raw.strip() if raw is not None and raw.strip() else None
+
+    try:
+        if (raw := text("OLLAMA_BASE_URL")) is not None:
+            values["base_url"] = raw
+        if (raw := text("OLLAMA_MODEL")) is not None:
+            values["model"] = raw
+        if (raw := text("OLLAMA_TEMPERATURE")) is not None:
+            values["temperature"] = float(raw)
+        if (raw := text("OLLAMA_REQUEST_TIMEOUT_SECONDS")) is not None:
+            values["request_timeout_seconds"] = float(raw)
+
+        if (raw := text("OLLAMA_TOOL_NUM_PREDICT")) is not None:
+            values["tool_num_predict"] = int(raw)
+
+        if (raw := text("OLLAMA_DECISION_NUM_PREDICT")) is not None:
+            values["decision_num_predict"] = int(raw)
+
+        if (raw := text("OLLAMA_KEEP_ALIVE")) is not None:
+            values["keep_alive"] = raw
+
+        if (raw := text("OLLAMA_MAX_TOOL_ITERATIONS")) is not None:
+            values["max_tool_iterations"] = int(raw)
+
+        if (raw := text("OLLAMA_MINIMUM_TOOL_CALLS")) is not None:
+            values["minimum_tool_calls"] = int(raw)
+        if (raw := text("RUN_OLLAMA_INTEGRATION")) is not None:
+            values["integration_enabled"] = _parse_bool("RUN_OLLAMA_INTEGRATION", raw)
+        if (raw := text("OLLAMA_VALIDATE_MODEL_ON_INIT")) is not None:
+            values["validate_model_on_init"] = _parse_bool("OLLAMA_VALIDATE_MODEL_ON_INIT", raw)
+        if (raw := text("OLLAMA_ALLOW_REMOTE_HOST")) is not None:
+            values["allow_remote_host"] = _parse_bool("OLLAMA_ALLOW_REMOTE_HOST", raw)
+    except ValueError as exc:
+        raise LLMConfigurationError("A numeric OLLAMA_* setting is not a valid number") from exc
+
+    values.update(overrides)
+    try:
+        return OllamaConfig(**values)
+    except ValidationError as exc:
+        problems = "; ".join(
+            f"{'.'.join(str(part) for part in error['loc']) or 'config'}: {error['msg']}"
+            for error in exc.errors(include_input=False, include_url=False)
+        )
+        raise LLMConfigurationError(f"Invalid Ollama configuration: {problems}") from exc

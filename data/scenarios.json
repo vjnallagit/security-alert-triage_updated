@@ -1,0 +1,81 @@
+[
+  {
+    "scenario_id": "A",
+    "title": "Repeated failed logins against a privileged account",
+    "description": "Repeated failed logins target a privileged account from an unfamiliar source.",
+    "scenario_category": "CRITICAL_FAILURE",
+    "alert_id": "ALERT-A-001",
+    "alert_type": "repeated_failed_login",
+    "severity": "HIGH",
+    "target_account": "admin.synthetic01",
+    "account_privilege": "PRIVILEGED",
+    "source": "203.0.113.25",
+    "source_familiarity": "UNFAMILIAR",
+    "asset_id": "ASSET-IDP-01",
+    "asset_name": "Synthetic Identity Provider",
+    "asset_criticality": "HIGH",
+    "failed_login_count": 12,
+    "correlated_alert_count": 2,
+    "unusual_access": true,
+    "confirmed_impact": false,
+    "evidence_strength": "STRONG",
+    "policy_id": "POL-PRIV-LOGIN-001",
+    "expected_characteristics": [
+      "Significant suspicious evidence is present",
+      "Compromise is NOT confirmed (no successful login from the unfamiliar source)"
+    ]
+  },
+  {
+    "scenario_id": "B",
+    "title": "Low-severity alert with limited evidence",
+    "description": "A low-severity alert has limited evidence and no confirmed impact.",
+    "scenario_category": "NORMAL",
+    "alert_id": "ALERT-B-001",
+    "alert_type": "minor_authentication_anomaly",
+    "severity": "LOW",
+    "target_account": "user.demo01",
+    "account_privilege": "STANDARD",
+    "source": "198.51.100.17",
+    "source_familiarity": "UNKNOWN",
+    "asset_id": "ASSET-WIKI-01",
+    "asset_name": "Synthetic Internal Wiki",
+    "asset_criticality": "LOW",
+    "failed_login_count": 1,
+    "correlated_alert_count": 0,
+    "unusual_access": false,
+    "confirmed_impact": false,
+    "evidence_strength": "LIMITED",
+    "policy_id": "POL-LOW-SEVERITY-001",
+    "expected_characteristics": [
+      "Evidence is weak and isolated",
+      "Weak evidence alone does not justify over-escalation"
+    ]
+  },
+  {
+    "scenario_id": "C",
+    "title": "Correlated alerts on a critical service with unusual access",
+    "description": "Correlated alerts involve a critical service and unusual access activity.",
+    "scenario_category": "EDGE_AMBIGUOUS",
+    "alert_id": "ALERT-C-001",
+    "alert_type": "correlated_service_anomaly",
+    "severity": "HIGH",
+    "target_account": "svc-payments-api",
+    "account_privilege": "SERVICE",
+    "source": "192.0.2.80",
+    "source_familiarity": "KNOWN",
+    "asset_id": "ASSET-PAY-01",
+    "asset_name": "Synthetic Payment Processing Service",
+    "asset_criticality": "CRITICAL",
+    "failed_login_count": 1,
+    "correlated_alert_count": 3,
+    "unusual_access": true,
+    "confirmed_impact": false,
+    "evidence_strength": "CONFLICTING",
+    "policy_id": "POL-CORRELATED-CRITICAL-001",
+    "expected_characteristics": [
+      "High potential consequence on a critical service with several correlated observations",
+      "Source is known but access timing is unusual, so evidence conflicts",
+      "No confirmed compromise"
+    ]
+  }
+]

@@ -1,0 +1,46 @@
+[
+  {
+    "alert_id": "ALERT-A-001",
+    "timestamp": "2026-03-10T02:14:00+00:00",
+    "alert_type": "repeated_failed_login",
+    "severity": "HIGH",
+    "summary": "12 failed logins for a privileged account within 6 minutes from a source not seen before.",
+    "target": "admin.synthetic01",
+    "source": "203.0.113.25",
+    "evidence": [
+      "12 failed authentication attempts between 02:08 and 02:14 UTC",
+      "Source address has no prior history with this account",
+      "Two related alerts raised for the same source address",
+      "No successful login from the source was recorded"
+    ]
+  },
+  {
+    "alert_id": "ALERT-B-001",
+    "timestamp": "2026-03-10T09:32:00+00:00",
+    "alert_type": "minor_authentication_anomaly",
+    "severity": "LOW",
+    "summary": "A single failed login for a standard user was followed by a successful login.",
+    "target": "user.demo01",
+    "source": "198.51.100.17",
+    "evidence": [
+      "One failed login, followed by a successful login two minutes later",
+      "Standard user accessing a low-criticality internal wiki",
+      "No related alerts"
+    ]
+  },
+  {
+    "alert_id": "ALERT-C-001",
+    "timestamp": "2026-03-10T03:47:00+00:00",
+    "alert_type": "correlated_service_anomaly",
+    "severity": "HIGH",
+    "summary": "Three correlated alerts on the payment service: off-hours access, new API usage pattern and one failed login.",
+    "target": "svc-payments-api",
+    "source": "192.0.2.80",
+    "evidence": [
+      "Service account used outside its normal operating window",
+      "Source address is a known internal system, but it does not normally use this account",
+      "A scheduled maintenance window may partly explain the activity, but it is not documented",
+      "No data loss or service disruption observed"
+    ]
+  }
+]

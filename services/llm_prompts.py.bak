@@ -1,0 +1,70 @@
+"""Prompt text for the LLM agent.
+
+The prompts describe the task and the required JSON shape. They never contain tool results (the model must
+call the tools to get evidence) and never contain the scenario's `expected_characteristics`, which are
+fixture design notes that would reveal the intended answer.
+"""
+
+import json
+
+from models.schemas import SecurityScenario
+from tools.langchain_security_tools import TOOL_NAMES
+
+# Fixture design notes are not part of the percept the agent should reason about.
+_EXCLUDED_SCENARIO_FIELDS = {"expected_characteristics"}
+
+SYSTEM_PROMPT = f"""You are a defensive security alert triage assistant working on SIMULATED, synthetic data.
+
+Your job: decide how urgently a security alert needs attention and recommend SAFE next steps for a human analyst.
+
+Rules you must follow:
+1. You MUST call at least two different tools to gather evidence before answering. Available tools: {", ".join(TOOL_NAMES)}.
+2. Base every factual statement on a tool result. Never invent IDs, counts, accounts, addresses or events.
+3. A tool result with status other than SUCCESS (NOT_FOUND, AMBIGUOUS, INVALID_INPUT, ERROR) is NOT evidence of a fact. Fix your call or say what is unknown.
+4. You only RECOMMEND. You never block, disable, quarantine, terminate, isolate, delete, change firewall rules, attack, or contain anything, and you never say you did. Consequential actions require authorization by a human.
+5. Do not claim a compromise unless a tool result confirms it. If impact is unconfirmed, say so plainly in `uncertainty`.
+6. Weak, limited evidence should not be over-escalated; strong evidence on a critical asset should not be under-escalated.
+
+When you have enough evidence, reply with ONLY one JSON object (no prose, no markdown) with exactly these keys:
+{{
+  "priority": "LOW" | "MEDIUM" | "HIGH" | "CRITICAL",
+  "decision": "MONITOR" | "COLLECT_MORE_EVIDENCE" | "INVESTIGATE" | "ESCALATE_TO_SECURITY_ANALYST",
+  "evidence": [{{"claim": str, "tool_name": str, "tool_call_id": str, "source_record_ids": [str],
+                 "is_absence_observation": bool, "asserted_facts": {{}}}}],
+  "uncertainty": str,
+  "likely_interpretation": str,
+  "recommended_actions": [str],
+  "audit_note": str,
+  "tools_called": [str],
+  "source_record_ids": [str]
+}}
+Each evidence item must use the real tool_call_id of the call that produced it and only source_record_ids that
+call returned. Use is_absence_observation=true only for a successful "nothing was found" result.
+"""
+
+
+def build_scenario_message(scenario: SecurityScenario) -> str:
+    """The percept: the scenario fields only. No tool output and no expected answer."""
+    fields = scenario.model_dump(mode="json", exclude=_EXCLUDED_SCENARIO_FIELDS)
+    return (
+        "Triage this security alert scenario. Use the tools to retrieve evidence; do not assume it.\n"
+        + json.dumps(fields, indent=2, sort_keys=True)
+    )
+
+
+def build_tool_correction_message(minimum_distinct_tools: int, used: tuple[str, ...]) -> str:
+    return (
+        f"You have not yet gathered enough evidence. You must obtain successful results from at least "
+        f"{minimum_distinct_tools} different tools that concern this scenario's own alert, asset, policy or "
+        f"account. Tools with usable results so far: {', '.join(used) or 'none'}. Call the missing tools now."
+    )
+
+
+def build_repair_message(problems: tuple[str, ...]) -> str:
+    listed = "\n".join(f"- {problem}" for problem in problems)
+    return (
+        "Your answer was rejected for these reasons:\n"
+        f"{listed}\n"
+        "Reply again with ONLY the corrected JSON object. Use only tool_call_ids and source_record_ids that "
+        "appeared in the tool results above. Do not call additional tools unless you must."
+    )

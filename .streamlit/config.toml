@@ -1,0 +1,6 @@
+# Keeps `streamlit run app.py` local to this machine and sends no usage statistics.
+[server]
+address = "localhost"
+
+[browser]
+gatherUsageStats = false

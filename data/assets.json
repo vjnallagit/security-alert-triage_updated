@@ -1,0 +1,23 @@
+[
+  {
+    "asset_id": "ASSET-IDP-01",
+    "asset_name": "Synthetic Identity Provider",
+    "asset_type": "identity_service",
+    "criticality": "HIGH",
+    "description": "Simulated central authentication service used by administrators."
+  },
+  {
+    "asset_id": "ASSET-WIKI-01",
+    "asset_name": "Synthetic Internal Wiki",
+    "asset_type": "internal_application",
+    "criticality": "LOW",
+    "description": "Simulated internal documentation wiki holding no sensitive data."
+  },
+  {
+    "asset_id": "ASSET-PAY-01",
+    "asset_name": "Synthetic Payment Processing Service",
+    "asset_type": "business_critical_service",
+    "criticality": "CRITICAL",
+    "description": "Simulated payment processing API whose outage would stop core business operations."
+  }
+]
